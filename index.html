@@ -175,6 +175,7 @@ h1.logo{margin:10px 0 2px;font-size:clamp(46px,13vw,64px);font-weight:900;letter
   text-shadow:0 0 10px rgba(255,209,102,.6)}
 .serial{position:absolute;right:14px;bottom:10px;font-size:10px;color:rgba(233,237,246,.45);
   font-variant-numeric:tabular-nums;letter-spacing:.08em}
+.vsline{margin-top:7px;font-size:12px;font-weight:800;color:var(--gold);letter-spacing:.04em;min-height:1em}
 .badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .bdg{font-size:11.5px;font-weight:800;padding:5px 11px;border-radius:999px;
   border:1px solid rgba(255,209,102,.4);color:var(--gold);background:rgba(255,209,102,.07)}
@@ -376,6 +377,7 @@ const SFX={ctx:null,muted:false,
  tap(){this.b(660,.06,"square",.03)},
  tick(){this.b(1250,.03,"square",.025)},
  win(){this.b(880,.09,"sine",.06);this.b(1318,.14,"sine",.05,.07)},
+ badge(){[784,988,1319].forEach((f,i)=>this.b(f,.12,"triangle",.05,i*.07))},
  loss(){this.b(170,.2,"sawtooth",.05)},
  reveal(){[523,659,784,1046].forEach((f,i)=>this.b(f,.3,"sine",.045,i*.09))}
 };
@@ -622,7 +624,7 @@ function hasChoice(id,js){return S.choices.some(c=>c.node===id&&(js?js.includes(
 function checkBadges(){
   S.badges=S.badges||[];
   for(const [t] of BADGES){
-    if(!S.badges.includes(t)&&BADGES.find(b=>b[0]===t)[2]()){S.badges.push(t);toast("🏅 解锁成就 · "+t);}
+    if(!S.badges.includes(t)&&BADGES.find(b=>b[0]===t)[2]()){S.badges.push(t);toast("🏅 解锁成就 · "+t);SFX.badge();}
   }
 }
 function drawSpark(){
@@ -763,6 +765,7 @@ function results(){
   <div class="card fadeUp" style="padding:14px">
     <canvas id="ecv" class="ecv"></canvas>
     <div class="fin">账户终值 <i>${fmt(S.equity)}</i>（<i class="${pct>=0?"posT":"negT"}">${pct>=0?"+":""}${pct.toFixed(1)}%</i>）</div>
+    <div class="vsline" id="vsline"></div>
     <div class="reco">
       <div class="rc"><span class="ic">🛠</span><span><b>工具</b>${dom.reco[0]}</span></div>
       <div class="rc"><span class="ic">📚</span><span><b>内容</b>${dom.reco[1]}</span></div>
@@ -776,6 +779,24 @@ function results(){
   stage().style.setProperty("--mood","#ffd166");setAtmo("#ffd166");
   drawRadar($("#rcv"),vals,132);
   drawSpark();drawEquityCurve($("#ecv"),S.equityHist);
+  /* 全场实时对比：调服务器遥测聚合（本地/离线时静默隐藏） */
+  fetch("api/stats").then(r=>r.json()).then(d=>{
+    if(!d||!d.total||d.total<2)return;
+    const el=document.querySelector("#vsline");if(!el)return;
+    const eqs=(d.top||[]).map(t=>t.e);
+    const my=S.equity;
+    if(eqs.length&&my>=eqs[0]){
+      el.textContent=`⚡ 全场第一 · 击败 ${d.total-1}/${d.total-1} 位玩家`;
+    }else{
+      const better=eqs.filter(e=>my>e).length;
+      if(better>0){
+        el.textContent=`⚡ 全场第 ${better+1} 名 · 击败 ${Math.round((d.total-better-1)/Math.max(1,d.total-1)*100)}% 玩家`;
+      }else{
+        const diff=Math.round((my-d.avgEquity)/Math.max(1,d.avgEquity)*100);
+        el.textContent=`⚡ ${diff>=0?"高于":"低于"}全场平均收益 ${Math.abs(diff)}% —— 下一局翻盘`;
+      }
+    }
+  }).catch(()=>{});
   SFX.reveal();confetti();vibrate([40,60,40]);
   /* 现场埋点（无服务器时静默失败，不影响游戏） */
   try{fetch("api/report",{method:"POST",headers:{"Content-Type":"application/json"},
@@ -842,15 +863,19 @@ function posterView(dom,ranked,scores,pct){
   x.fillStyle="#ffd166";x.font="800 26px -apple-system,sans-serif";
   x.fillText(ranked[0].pr.name+" "+Math.round(ranked[0].w*100)+"% × "+
     ranked[1].pr.name+" "+Math.round(ranked[1].w*100)+"%",W/2,996);
+  x.fillStyle="rgba(233,237,246,.85)";x.font="700 22px -apple-system,sans-serif";
+  x.fillText("结局 · "+(pct>=30?"🔥 财富自由":pct>=10?"🏆 稳健赢家":pct>=-10?"🌱 市场新生":pct>=-30?"🍜 韭菜毕业":"💀 关灯吃面"),W/2,1048);
+  x.fillStyle="#ffd166";x.font="600 20px -apple-system,sans-serif";
+  x.fillText((S.badges||[]).slice(0,3).map(b=>"🏅 "+b).join("   ")||"🏅 下一局解锁你的徽章",W/2,1082);
   /* 二维码占位 */
   x.strokeStyle="rgba(255,209,102,.6)";x.lineWidth=3;
-  roundRect(x,W/2-90,1036,180,180,18);x.stroke();
+  roundRect(x,W/2-90,1104,180,180,18);x.stroke();
   x.fillStyle="rgba(233,237,246,.4)";x.font="500 20px -apple-system,sans-serif";
-  x.fillText("二维码位",W/2,1132);
+  x.fillText("二维码位",W/2,1200);
   x.fillStyle="rgba(233,237,246,.5)";x.font="600 22px -apple-system,sans-serif";
-  x.fillText("行情剧场 · 交易人格试炼",W/2,1266);
+  x.fillText("行情剧场 · 交易人格试炼",W/2,1308);
   x.fillStyle="rgba(233,237,246,.28)";x.font="400 16px -apple-system,sans-serif";
-  x.fillText("虚拟资金 · 教育用途 · 不构成投资建议",W/2,1300);
+  x.fillText("虚拟资金 · 教育用途 · 不构成投资建议",W/2,1330);
   const url=cv.toDataURL("image/png");
   const m=document.createElement("div");m.className="modal";
   m.innerHTML=`<div class="mcard pop" style="max-width:340px;max-height:92vh;overflow:auto">
