@@ -175,6 +175,20 @@ h1.logo{margin:10px 0 2px;font-size:clamp(46px,13vw,64px);font-weight:900;letter
   text-shadow:0 0 10px rgba(255,209,102,.6)}
 .serial{position:absolute;right:14px;bottom:10px;font-size:10px;color:rgba(233,237,246,.45);
   font-variant-numeric:tabular-nums;letter-spacing:.08em}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.bdg{font-size:11.5px;font-weight:800;padding:5px 11px;border-radius:999px;
+  border:1px solid rgba(255,209,102,.4);color:var(--gold);background:rgba(255,209,102,.07)}
+.bdg.dim{border-color:rgba(255,255,255,.15);color:var(--dim);background:transparent}
+.ending{padding:12px 16px}
+.ending .et{font-size:17px;font-weight:900;color:var(--gold)}
+.ending .ed{font-size:12.5px;color:var(--dim);margin-top:3px}
+.wf,.wr{position:absolute;border-radius:2px;will-change:transform;opacity:.85}
+.wf{top:-8%;animation:wfall linear forwards}
+.wr{bottom:-8%;animation:wrise linear forwards}
+@keyframes wfall{to{transform:translateY(118vh) rotate(26deg);opacity:0}}
+@keyframes wrise{to{transform:translateY(-114vh) rotate(-20deg);opacity:0}}
+#atmo{overflow:hidden}
+.live{position:fixed;top:0;left:0;width:100vw;height:32vh;opacity:.4;pointer-events:none;z-index:0}
 @keyframes flip{from{opacity:0;transform:rotateY(70deg) scale(.8)}to{opacity:1;transform:none}}
 .rarity{position:absolute;top:-11px;left:50%;transform:translateX(-50%);
   font-size:10px;font-weight:900;letter-spacing:.3em;color:#1a1200;white-space:nowrap;
@@ -432,6 +446,9 @@ function drawKline(cv,bars,anim,done){
       x.fillStyle="#ffd166";x.shadowColor="#ffd166";x.shadowBlur=10;
       x.beginPath();x.arc(X(i),yy,3.4,0,7);x.fill();x.shadowBlur=0;
       x.fillStyle="#ffd166";x.fillText("此刻",X(i)-10,yy-11);
+      x.fillRect(X(i)-56,yy+6,50,15);
+      x.fillStyle="#1a1200";x.font="900 10px -apple-system,sans-serif";
+      x.fillText(bars[bars.length-1][2].toFixed(0),X(i)-50,yy+14);
       if(done)done();return;
     }
     raf(frame);
@@ -497,7 +514,7 @@ const dimScore=v=>clamp(Math.round(50+v*7),2,99);
 
 /* ================= 状态 ================= */
 let S={step:0,profile:{},equity:100000,choices:[],combo:0,muted:false};
-function saveS(){store(KEY,{step:S.step,profile:S.profile,equity:S.equity,choices:S.choices,combo:S.combo,full:curFull,eqh:S.equityHist});}
+function saveS(){store(KEY,{step:S.step,profile:S.profile,equity:S.equity,choices:S.choices,combo:S.combo,full:curFull,eqh:S.equityHist,b:S.badges||[]});}
 
 /* ================= 屏幕：开场 ================= */
 function intro(){
@@ -505,6 +522,7 @@ function intro(){
   const saved=store(KEY);
   stage().innerHTML=`
   <div class="hero fadeUp">
+    <canvas id="live" class="live"></canvas>
     <div class="tagEn">THE MARKET THEATRE</div>
     <h1 class="logo">行情剧场</h1>
     <div class="sub">交易人格试炼</div>
@@ -527,8 +545,26 @@ function intro(){
   <div class="ticker"><span>${NODES.map((n,i)=>`第${CN[i]}幕 ${n.arc} ${EPS[n.ep].pct>0?"+":""}${EPS[n.ep].pct}%`).join("&nbsp;&nbsp;·&nbsp;&nbsp;")}&nbsp;&nbsp;·&nbsp;&nbsp;THE MARKET THEATRE&nbsp;&nbsp;·&nbsp;&nbsp;</span></div>`;
   $("#go").onclick=()=>{SFX.init();newGame();};
   $("#mode").onclick=()=>{curFull=!curFull;setMode(curFull);store("hq_mode_full",curFull);intro();};
+  /* 开场活体行情：缓慢生长的随机K线 */
+  let lp=100;const liveBars=Array.from({length:70},()=>{const o=lp;lp=Math.max(60,lp+(Math.random()-.48)*4);return [lp,o];});
+  const drawLive=()=>{const cv=$("#live");if(!cv)return;const dpr=devicePixelRatio||1,W=cv.clientWidth||innerWidth,H=270;
+    cv.width=W*dpr;cv.height=H*dpr;const x=cv.getContext("2d");x.scale(dpr,dpr);
+    let lo=1e9,hi=-1e9;liveBars.forEach(b=>{lo=Math.min(lo,Math.min(b[0],b[1]));hi=Math.max(hi,Math.max(b[0],b[1]));});
+    const sp=(hi-lo)||1,cw=Math.max(2,(W-20)/liveBars.length*.6);
+    liveBars.forEach((b,i)=>{const X=10+(W-20)*(i+.5)/liveBars.length;
+      const Y=v=>H-14-(H-30)*(v-lo)/sp;const up=b[0]>=b[1];
+      x.strokeStyle=up?"#ff3b5c":"#00e676";x.fillStyle=up?"#ff3b5c":"#00e676";x.lineWidth=1.2;
+      x.shadowColor=x.strokeStyle;x.shadowBlur=5;
+      x.beginPath();x.moveTo(X,Y(Math.max(b[0],b[1])+2));x.lineTo(X,Y(Math.min(b[0],b[1])-2));x.stroke();
+      x.fillRect(X-cw/2,Y(Math.max(b[0],b[1])),cw,Math.max(1.4,Math.abs(Y(b[0])-Y(b[1]))));});
+    x.shadowBlur=0;};
+  drawLive();
+  const lt=setInterval(()=>{const o=liveBars[liveBars.length-1][0];
+    liveBars.push([Math.max(60,o+(Math.random()-.48)*4),o]);liveBars.shift();drawLive();},1100);
+  TIMERS.t.push(lt);
   const r=$("#resume");if(r)r.onclick=()=>{SFX.init();curFull=!!saved.full;setMode(curFull);
     S={step:saved.step,profile:saved.profile||{},equity:saved.equity,choices:saved.choices||[],combo:saved.combo||0,
+       badges:(saved.b&&saved.b.length)?saved.b:[],
        equityHist:(saved.eqh&&saved.eqh.length)?saved.eqh:[saved.equity||100000]};
     showLevel(S.step);};
 }
@@ -554,6 +590,41 @@ function setAtmo(mood){
   document.body.insertAdjacentHTML("afterbegin",
     `<div id="atmo" style="background:radial-gradient(900px 420px at 50% -6%, ${mood}2e, transparent 62%)"></div>`);
 }
+const WEATHER={N03:"rain",N10:"rain",N04:"rise",N05:"rise",N08:"rise",N02:"rise",N07:"rise"};
+function setWeather(type,mood){
+  const atmo=document.getElementById("atmo");if(!atmo||type==="none")return;
+  for(let i=0;i<12;i++){
+    const s=document.createElement("i");
+    const col=type==="rain"?(Math.random()<.5?"#ff3b5c":"#00e676"):(type==="rise"?"#ffd166":mood);
+    s.className=type==="rise"?"wr":"wf";
+    s.style.left=(Math.random()*100)+"%";
+    s.style.animationDuration=(4.5+Math.random()*3.5)+"s";
+    s.style.animationDelay=(Math.random()*4)+"s";
+    s.style.width=(type==="rise"?5:4+Math.random()*3)+"px";
+    s.style.height=(type==="rise"?12:14+Math.random()*10)+"px";
+    s.style.background=`linear-gradient(${col},${col}00)`;
+    s.style.boxShadow=`0 0 8px ${col}88`;
+    atmo.appendChild(s);
+    s.addEventListener("animationend",()=>s.remove());
+  }
+}
+const BADGES=[
+ ["铁血纪律","两次在关键处纪律拉满",()=>S.choices.filter(c=>(c.delta&&c.delta.discipline||0)>=2).length>=2],
+ ["逆势独行","全民荐股时你没有跟",()=>hasChoice("N04",[1,2])],
+ ["梭哈之王","开局就满仓干",()=>hasChoice("N01",[3])],
+ ["情绪绝缘体","全程没有一次情绪化决策",()=>!S.choices.some(c=>(c.delta&&c.delta.emotion||0)<=-2)],
+ ["黑天鹅幸存者","穿越了单日 -8%",()=>hasChoice("N10")],
+ ["复盘之神","周日夜里写下了交易日志",()=>hasChoice("N11",[0])],
+ ["过山车乘客","单笔盈亏超过 ±8%",()=>S.choices.some(c=>Math.abs(c.pnl||0)>=8)],
+ ["落袋为安","浮盈时先落了袋",()=>hasChoice("N02",[0])],
+];
+function hasChoice(id,js){return S.choices.some(c=>c.node===id&&(js?js.includes(c.j):true));}
+function checkBadges(){
+  S.badges=S.badges||[];
+  for(const [t] of BADGES){
+    if(!S.badges.includes(t)&&BADGES.find(b=>b[0]===t)[2]()){S.badges.push(t);toast("🏅 解锁成就 · "+t);}
+  }
+}
 function drawSpark(){
   const cv=$("#spark");if(!cv)return;
   const dpr=devicePixelRatio||1,w=56,h=20;cv.width=w*dpr;cv.height=h*dpr;
@@ -570,6 +641,7 @@ function showLevel(i){
   clearAll();S.step=i;saveS();
   const n=NODES[i],ep=EPS[n.ep];
   stage().style.setProperty("--mood",n.mood);setAtmo(n.mood);
+  setWeather(WEATHER[n.id]||"drift",n.mood);
   stage().innerHTML=topbar(i,NODES.length)+`
   <div class="card fadeUp">
     <div class="chartHead"><span class="act">第${CN[i]}幕 · ${n.arc}</span>
@@ -628,7 +700,7 @@ function choose(i,j,timeout){
   SFX.tap();
   /* 画像累积 */
   accumulate(S.profile,delta);
-  S.choices.push({tag:n.tag,label});
+  S.choices.push({tag:n.tag,label,node:n.id,j,delta});
   /* 连击 */
   if((delta.discipline||0)>0){S.combo++;}else if((delta.discipline||0)<0){S.combo=0;}
   S.equityHist.push(S.equity);drawSpark();
@@ -637,6 +709,7 @@ function choose(i,j,timeout){
     const pct=pnlR[0]===pnlR[1]?pnlR[0]:rnd(pnlR[0],pnlR[1]);
     const amt=Math.round(S.equity*pct/100);
     const old=S.equity;S.equity=Math.max(1000,S.equity+amt);
+    S.choices[S.choices.length-1].pnl=+pct.toFixed(1);
     const good=amt>=0;
     floatNum((good?"+":"-")+fmt(Math.abs(amt)).slice(2),good?"pos":"neg");
     flash(good?"flashUp":"flashDown");
@@ -648,6 +721,7 @@ function choose(i,j,timeout){
     floatNum("+"+gained+" 复盘经验","xp");
   }
   if(S.combo>=2){const c=$("#combo");if(c){c.textContent=`纪律连击 ×${S.combo}`;c.classList.add("pop");}}
+  checkBadges();
   saveS();
   later(()=>{i+1<NODES.length?showLevel(i+1):results();},FAST?900:1500);
 }
@@ -679,8 +753,13 @@ function results(){
       <div class="dl">${DIMS.map(d=>`<div><b>${DIMCN[d]}</b> <i class="${scores[d]>=60?"posT":scores[d]<=40?"negT":""}">${scores[d]}</i></div>`).join("")}</div></div>
     <div class="breplay"><span class="tt">关键行为还原</span>
       ${picks.map(p=>`· <b>${p.tag}</b>：你选择了「${p.label}」<br>`).join("")}</div>
+    <div class="badges">${S.badges&&S.badges.length?S.badges.map(b=>`<span class="bdg">🏅 ${b}</span>`).join(""):`<span class="bdg dim">本局未解锁徽章 —— 下一局试着拿下「铁血纪律」</span>`}</div>
     <div class="serial">No.${String(1000+Math.floor(Math.random()*9000))} · SEASON 1 · 本场第 ${S.equityHist.length} 次抉择</div>
   </div></div>
+  <div class="card fadeUp ending">
+    <div class="et">${pct>=30?"🔥 财富自由（模拟盘版）":pct>=10?"🏆 稳健赢家":pct>=-10?"🌱 市场新生":pct>=-30?"🍜 韭菜毕业":"💀 关灯吃面（模拟的）"}</div>
+    <div class="ed">${pct>=30?"这局你是传说。下一局，市场会记住你。":pct>=10?"这条收益曲线，比不少基金经理都体面。":pct>=-10?"学费没交多少，故事倒是攒了一堆。":pct>=-30?"关灯吃面之前，先把这份人格报告吃了。":"别难过——虚拟盘亏掉的钱，攒下的是真经验。"}</div>
+  </div>
   <div class="card fadeUp" style="padding:14px">
     <canvas id="ecv" class="ecv"></canvas>
     <div class="fin">账户终值 <i>${fmt(S.equity)}</i>（<i class="${pct>=0?"posT":"negT"}">${pct>=0?"+":""}${pct.toFixed(1)}%</i>）</div>
@@ -796,7 +875,7 @@ window.addEventListener("error",()=>{try{
 }catch(e){}});
 
 /* ================= 启动 ================= */
-function newGame(){S={step:0,profile:{},equity:100000,choices:[],combo:0,equityHist:[100000]};showLevel(0);}
+function newGame(){S={step:0,profile:{},equity:100000,choices:[],combo:0,badges:[],equityHist:[100000]};showLevel(0);}
 let curFull=!!store("hq_mode_full");
 setMode(curFull);
 setAtmo("#ffd166");
