@@ -393,9 +393,10 @@ function shake(){stage().classList.remove("shake");void stage().offsetWidth;
 function vibrate(ms){try{navigator.vibrate&&navigator.vibrate(ms);}catch(e){}}
 function toast(t){const e=document.createElement("div");e.className="toast";e.textContent=t;
   document.body.appendChild(e);later(()=>e.remove(),2500);}
-function danmaku(lines,n){const box=$("#danmaku");const use=lines.slice(0,n||5);
+function danmaku(lines,n,mood){const box=$("#danmaku");const use=lines.slice(0,n||5);
   use.forEach((s,i)=>{const e=document.createElement("span");e.className="dm";e.textContent=s;
     e.style.top=(9+i*5.5+rnd(0,3))+"%";e.style.fontSize=(11+rnd(0,5))+"px";
+    if(i%2===1)e.style.color=(mood||"#ffd166")+"d9";
     e.style.animationDuration=(3.6+rnd(0,2.4))+"s";e.style.animationDelay=(i*.55+rnd(0,.4))+"s";
     box.appendChild(e);e.addEventListener("animationend",()=>e.remove());});}
 function confetti(){const cv=$("#confetti"),ctx=cv.getContext("2d");
@@ -675,7 +676,7 @@ function buildDecision(i){
     <div class="opts">${n.o.map((o,j)=>
       `<button class="opt" data-j="${j}"><span class="k">${"ABCD"[j]}</span>${o[0]}</button>`).join("")}</div>
     <div class="combo" id="combo">${S.combo>=2?`纪律连击 ×${S.combo}`:""}</div></div>`;
-  danmaku(n.dm,4);
+  danmaku(n.dm,4,n.mood);
   const C=163.36,T=FAST?8:18;let left=T;
   const fg=$("#rfg"),rb=$("#rb"),rs=$("#rsec");
   fg.style.strokeDashoffset=0;
@@ -683,7 +684,7 @@ function buildDecision(i){
     if(left<=0){clearInterval(cdIv);timedOut(i);return;}
     rs.textContent=left;
     fg.style.strokeDashoffset=C*(1-left/T);
-    if(left<=6){rb.classList.add("hot");SFX.tick();}
+    if(left<=6){rb.classList.add("hot");SFX.b(850+(6-left)*90,.03,"square",.028);}
   },1000);
   rs.textContent=T;
   box.querySelectorAll(".opt").forEach(b=>b.onclick=()=>choose(i,+b.dataset.j,false));
