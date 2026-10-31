@@ -45,6 +45,9 @@ body::after{content:"";position:fixed;inset:0;z-index:70;pointer-events:none;
 #stage{position:relative;z-index:2;max-width:470px;margin:0 auto;min-height:100vh;min-height:100dvh;
   padding:calc(env(safe-area-inset-top) + 14px) 16px calc(env(safe-area-inset-bottom) + 20px);
   display:flex;flex-direction:column;gap:12px}
+#atmo{position:fixed;inset:0;z-index:1;pointer-events:none;transition:background 1.2s ease}
+.spark{width:56px;height:20px;flex:none;opacity:.95}
+.ecv{width:100%;height:76px;display:block;margin:12px 0 2px}
 #stage.shake{animation:shk .35s}
 @keyframes shk{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
 
@@ -83,7 +86,10 @@ body::after{content:"";position:fixed;inset:0;z-index:70;pointer-events:none;
 
 /* 图表卡 */
 .chartHead{display:flex;align-items:center;gap:8px;padding:12px 14px 6px}
-.act{font-size:13px;font-weight:800;color:var(--gold);letter-spacing:.2em}
+.act{font-size:12px;font-weight:900;letter-spacing:.14em;color:#1a1200;
+  background:linear-gradient(135deg,var(--gold),#c9861a);padding:4px 14px;border-radius:3px;
+  clip-path:polygon(0 0,100% 0,100% calc(50% - 4px),calc(100% - 5px) 50%,100% calc(50% + 4px),100% 100%,0 100%,5px 50%,0 calc(50% - 4px));
+  box-shadow:0 0 12px rgba(255,209,102,.35)}
 .chip{font-size:11px;color:var(--dim);border:1px solid rgba(255,255,255,.14);
   padding:2px 8px;border-radius:999px}
 .chip.real{color:var(--gold);border-color:rgba(255,209,102,.4);font-weight:700}
@@ -111,6 +117,8 @@ body::after{content:"";position:fixed;inset:0;z-index:70;pointer-events:none;
   line-height:1.45;color:var(--ink);cursor:pointer;border-radius:14px;
   background:linear-gradient(135deg,rgba(255,255,255,.055),rgba(255,255,255,.02));
   border:1px solid rgba(255,255,255,.1);transition:transform .12s, border-color .2s}
+.opt::before{content:"";position:absolute;left:0;top:14%;bottom:14%;width:3px;border-radius:2px;
+  background:var(--mood,var(--gold));opacity:.5;transition:opacity .3s}
 .opt:active{transform:scale(.97);border-color:var(--gold)}
 .opt .k{display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;
   margin-right:9px;border-radius:7px;font-size:12px;font-weight:900;color:#1a1200;
@@ -158,7 +166,15 @@ h1.logo{margin:10px 0 2px;font-size:clamp(46px,13vw,64px);font-weight:900;letter
   background:linear-gradient(165deg,rgba(30,22,10,.92),rgba(17,23,40,.92) 55%);
   border:1px solid rgba(255,209,102,.55);
   box-shadow:0 0 42px rgba(255,209,102,.22),0 20px 60px rgba(0,0,0,.6);
-  animation:flip .8s cubic-bezier(.2,1.1,.35,1) both;transform-style:preserve-3d}
+  animation:flip .8s cubic-bezier(.2,1.1,.35,1) both;transform-style:preserve-3d;overflow:hidden}
+.pcard::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(115deg,transparent 32%,rgba(255,255,255,.12) 44%,rgba(139,123,255,.20) 50%,rgba(255,209,102,.15) 56%,transparent 68%);
+  background-size:260% 260%;animation:holo 3.4s linear infinite}
+@keyframes holo{0%{background-position:130% -20%}100%{background-position:-45% 110%}}
+.stars{font-size:12px;letter-spacing:.5em;color:var(--gold);margin:6px 0 2px;
+  text-shadow:0 0 10px rgba(255,209,102,.6)}
+.serial{position:absolute;right:14px;bottom:10px;font-size:10px;color:rgba(233,237,246,.45);
+  font-variant-numeric:tabular-nums;letter-spacing:.08em}
 @keyframes flip{from{opacity:0;transform:rotateY(70deg) scale(.8)}to{opacity:1;transform:none}}
 .rarity{position:absolute;top:-11px;left:50%;transform:translateX(-50%);
   font-size:10px;font-weight:900;letter-spacing:.3em;color:#1a1200;white-space:nowrap;
@@ -247,67 +263,67 @@ const PERSONAS=[
 /* 12个决策关卡：冠军8关（穷举495组合的100%最优集）+ 4扩展关（12幕完整版） */
 const CN=["一","二","三","四","五","六","七","八","九","十","十一","十二"];
 const ALL={
- N01:{arc:"开局",tag:"仓位管理",ep:"N01",q:"10 万虚拟金开局，你的第一笔仓怎么建？",def:2,
+ N01:{mood:"#4f8cff",arc:"开局",tag:"仓位管理",ep:"N01",q:"10 万虚拟金开局，你的第一笔仓怎么建？",def:2,
   o:[["先投 10% 试探，看准再加",{risk:-2,discipline:1,patience:1},[2,4]],
      ["按计划分三批建仓",{discipline:2,adapt:1},[3,6]],
      ["半仓稳健蓝筹，求稳",{risk:-1,patience:1},[1,3]],
      ["看好就全上，仓位给足",{risk:2,patience:-1},[0,12]]],
   dm:["3000点保卫战又要来了？","新手保护期好运🍀","底部分批，稳","这波必须上"]},
- N04:{arc:"狂欢",tag:"从众FOMO",ep:"N04",q:"群里都在晒同一只三天涨 20% 的股票",def:1,
+ N04:{mood:"#ffb03b",arc:"狂欢",tag:"从众FOMO",ep:"N04",q:"群里都在晒同一只三天涨 20% 的股票",def:1,
   o:[["再不上车就晚了，跟！",{emotion:-2,independence:-3,risk:1},[5,12]],
      ["先记下来，研究基本面再说",{independence:3,adapt:1},[0,2]],
      ["涨这么猛，给我也不接",{independence:3,emotion:1,patience:1},[-1,1]],
      ["小仓位跟一点，图个参与",{emotion:-1,independence:-2,risk:1},[2,5]]],
   dm:["家人们谁懂啊 又涨停🔥","不上车天理难容","卖房全仓冲！","连楼下阿姨都在晒收益","再不上车就晚了"]},
- N05:{arc:"连胜",tag:"过度自信",ep:"N05",q:"连续三笔交易都赚了，收益曲线陡峭向上",def:1,
+ N05:{mood:"#ff6b4a",arc:"连胜",tag:"过度自信",ep:"N05",q:"连续三笔交易都赚了，收益曲线陡峭向上",def:1,
   o:[["感觉来了，加大仓位",{risk:2,emotion:-2,discipline:-1},[-5,12]],
      ["仓位不变，按系统走",{discipline:2,emotion:1},[2,6]],
      ["提取一部分利润降风险",{risk:-1,discipline:1,adapt:1},[1,5]]],
   dm:["他就是股神吧","连赢三把 天命之子","梭哈！","冷静 冷静"]},
- N02:{arc:"落袋",tag:"处置效应",ep:"N02",q:"持仓浮盈 8%，群里都在恭喜你",def:2,
+ N02:{mood:"#3bd6c4",arc:"落袋",tag:"处置效应",ep:"N02",q:"持仓浮盈 8%，群里都在恭喜你",def:2,
   o:[["落袋为安，马上卖",{patience:-2,risk:-1},[7,9]],
      ["加仓，乘胜追击",{risk:2,emotion:-1},[-2,6]],
      ["按原计划持有到目标价",{patience:2,discipline:2},[6,10]],
      ["卖一半，剩下的拿着",{emotion:1},[5,8]]],
   dm:["落袋才是真香","拿住 别飘","牛市旗手又涨停","卖飞了怎么办"]},
- N03:{arc:"崩塌",tag:"损失厌恶",ep:"N03",q:"持仓急跌 6%，账户一片绿",def:3,
+ N03:{mood:"#5ad0ff",arc:"崩塌",tag:"损失厌恶",ep:"N03",q:"持仓急跌 6%，账户一片绿",def:3,
   o:[["果断止损，认错离场",{discipline:2,risk:-1},[-6.5,-5.5]],
      ["补仓摊低成本",{risk:2,emotion:-1},[-14,-8]],
      ["关掉 App，假装看不见",{discipline:-2,emotion:-2,patience:1},[-16,-9]],
      ["先查逻辑：没坏就拿住",{adapt:2,independence:2,discipline:1},[-11,-6]]],
   dm:["救命 我的账户","关灯吃面🍜","说好的慢牛呢","国家队快来","千股跌停再现"]},
- N08:{arc:"突袭",tag:"追高冲动",ep:"N08",q:"重大利好突袭，股价瞬间冲高 5%",def:1,
+ N08:{mood:"#ff5c8a",arc:"突袭",tag:"追高冲动",ep:"N08",q:"重大利好突袭，股价瞬间冲高 5%",def:1,
   o:[["追进去，怕没机会",{emotion:-2,patience:-1,risk:1},[1,8]],
      ["等情绪冷却再评估",{patience:1,independence:2,adapt:1},[-1,3]],
      ["看量能决定，冲高放量就走",{independence:1,discipline:1,adapt:1},[0,5]]],
   dm:["9·24来了！！","踏空比套牢难受100倍","牛市起点实锤？","这量能 恐怖如斯","怕高都是苦命人？"]},
- N10:{arc:"至暗",tag:"黑天鹅预案",ep:"N10",q:"大盘单日暴跌 8%，组合大幅回撤",def:1,
+ N10:{mood:"#6a7bff",arc:"至暗",tag:"黑天鹅预案",ep:"N10",q:"大盘单日暴跌 8%，组合大幅回撤",def:1,
   o:[["全部清仓，先保住本金",{risk:-2,emotion:-1},[-6,-2]],
      ["按预案执行：对冲/减半",{discipline:2,adapt:1},[-5,-3]],
      ["机会来了，越跌越买",{risk:2,emotion:-1,independence:1},[4,10]],
      ["不看账户，等风暴过去",{patience:1,emotion:1},[-8,-1]]],
   dm:["开盘-7.72%…","熔断了要","机会是跌出来的","稳住 别乱","这次不一样吗"]},
- N06:{arc:"磨砺",tag:"耐心换手",ep:"N06",q:"持仓横盘两周，热点全在别处",def:1,
+ N06:{mood:"#8fa3b8",arc:"磨砺",tag:"耐心换手",ep:"N06",q:"持仓横盘两周，热点全在别处",def:1,
   o:[["换成热点股，不等了",{patience:-2,emotion:-1,independence:-1},[-4,6]],
      ["继续持有，等逻辑兑现",{patience:2,discipline:1},[-2,2]],
      ["减半仓，留一部分观察",{risk:-1,patience:1,discipline:1},[-1,1]]],
   dm:["横成心电图了","热点天天换 我自岿然","横久必跌？","装死中 勿扰"]},
- N07:{arc:"解套",tag:"解套效应",ep:"N07",q:"套了 15% 的那只股票终于回到成本线",def:1,
+ N07:{mood:"#59a5ff",arc:"解套",tag:"解套效应",ep:"N07",q:"套了 15% 的那只股票终于回到成本线",def:1,
   o:[["马上卖，再也不受这份罪",{emotion:-1,discipline:-1},[0,2]],
      ["按当初定好的卖点执行",{discipline:2,adapt:1},[3,8]],
      ["都回来了，说不定还能再涨",{patience:-1,emotion:-1,risk:1},[-3,6]]],
   dm:["回本了 快跑","解套是第一个卖点","拿住 翻倍在望","心魔罢了"]},
- N09:{arc:"信号",tag:"系统执行",ep:"N09",q:"你的策略信号显示卖出，但你的直觉说还会涨",def:0,
+ N09:{mood:"#b58cff",arc:"信号",tag:"系统执行",ep:"N09",q:"你的策略信号显示卖出，但你的直觉说还会涨",def:0,
   o:[["无条件执行信号",{discipline:2,adapt:1},[1,4]],
      ["相信自己的感觉，不卖",{discipline:-2,emotion:-1},[-6,3]],
      ["卖一半，两边都不得罪",{risk:-1},[0,2]]],
   dm:["信号不会骗人","感觉说：拿着","系统派狂喜","主观派冷笑"]},
- N12:{arc:"排名",tag:"风格漂移",ep:"N12",q:"朋友的收益遥遥领先，你暂时落后",def:1,
+ N12:{mood:"#ffd166",arc:"排名",tag:"风格漂移",ep:"N12",q:"朋友的收益遥遥领先，你暂时落后",def:1,
   o:[["改变风格，搏一把追回来",{discipline:-2,emotion:-2,risk:1},[-6,9]],
      ["坚持自己的风格打完",{independence:2,discipline:2},[-1,3]],
      ["降低仓位，稳住不亏就行",{risk:-1,patience:1},[0,2]]],
   dm:["他是不是要梭了","别上头 冷静","排名焦虑害人","坚持自己"]},
- N11:{arc:"复盘",tag:"复盘习惯",ep:"N11",q:"周日晚上的固定时间，你会？",def:0,
+ N11:{mood:"#a78bfa",arc:"复盘",tag:"复盘习惯",ep:"N11",q:"周日晚上的固定时间，你会？",def:0,
   o:[["写交易日志，逐笔复盘",{adapt:2,discipline:1},[0,0]],
      ["刷刷大V观点，看别人怎么判",{independence:-1,adapt:1},[0,0]],
      ["从不复盘，下周凭感觉",{adapt:-2},[0,0]]],
@@ -378,7 +394,9 @@ function confetti(){const cv=$("#confetti"),ctx=cv.getContext("2d");
     ps.forEach(p=>{if(p.life<=0)return;alive=true;p.life--;p.x+=p.vx;p.y+=p.vy;p.vy+=p.g;
       p.vx*=.99;p.r+=p.vr;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r);
       ctx.globalAlpha=clamp(p.life/40,0,1);ctx.fillStyle=p.c;
-      ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.62);ctx.restore();});
+      ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.62);
+      ctx.fillRect(-.75,-p.s*1.05,1.5,p.s*1.45);
+      ctx.restore();});
     if(alive)raf(loop);else ctx.clearRect(0,0,W2,H2);})();}
 
 /* ================= K线渲染（辉光、入场动画、此刻标记） ================= */
@@ -441,6 +459,25 @@ function drawRadar(cv,vals,size){const dpr=devicePixelRatio||1;
   const x=cv.getContext("2d");x.scale(dpr,dpr);
   paintRadar(x,size/2,size/2,size/2-22,vals);}
 
+function drawEquityCurve(cv,hist){
+  const dpr=devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;
+  cv.width=W*dpr;cv.height=H*dpr;const x=cv.getContext("2d");x.scale(dpr,dpr);
+  const lo=Math.min(...hist),hi=Math.max(...hist),sp=(hi-lo)||1,pad=6;
+  const X=i=>pad+(W-2*pad)*i/(hist.length-1),Y=v=>H-pad-(H-2*pad)*(v-lo)/sp;
+  x.strokeStyle="rgba(255,255,255,.12)";x.setLineDash([3,4]);
+  x.beginPath();x.moveTo(0,Y(100000));x.lineTo(W,Y(100000));x.stroke();x.setLineDash([]);
+  x.beginPath();hist.forEach((v,i)=>{i?x.lineTo(X(i),Y(v)):x.moveTo(X(i),Y(v));});
+  x.lineTo(X(hist.length-1),H);x.lineTo(X(0),H);x.closePath();
+  const g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,"rgba(255,209,102,.26)");g.addColorStop(1,"rgba(255,209,102,0)");
+  x.fillStyle=g;x.fill();
+  x.beginPath();hist.forEach((v,i)=>{i?x.lineTo(X(i),Y(v)):x.moveTo(X(i),Y(v));});
+  x.strokeStyle="#ffd166";x.lineWidth=2;x.shadowColor="#ffd166";x.shadowBlur=8;x.stroke();x.shadowBlur=0;
+  [0,hist.length-1].forEach(i=>{x.fillStyle=i?"#ffd166":"rgba(233,237,246,.65)";
+    x.beginPath();x.arc(X(i),Y(hist[i]),3,0,7);x.fill();});
+  x.fillStyle="rgba(233,237,246,.5)";x.font="9px -apple-system,sans-serif";x.textBaseline="bottom";
+  x.fillText("本金 100,000",4,Math.max(9,Y(100000)-3));
+}
+
 /* ================= 引擎 ================= */
 function accumulate(profile,delta){DIMS.forEach(d=>{profile[d]=(profile[d]||0)+(delta[d]||0);});}
 function classify(profile){
@@ -460,7 +497,7 @@ const dimScore=v=>clamp(Math.round(50+v*7),2,99);
 
 /* ================= 状态 ================= */
 let S={step:0,profile:{},equity:100000,choices:[],combo:0,muted:false};
-function saveS(){store(KEY,{step:S.step,profile:S.profile,equity:S.equity,choices:S.choices,combo:S.combo,full:curFull});}
+function saveS(){store(KEY,{step:S.step,profile:S.profile,equity:S.equity,choices:S.choices,combo:S.combo,full:curFull,eqh:S.equityHist});}
 
 /* ================= 屏幕：开场 ================= */
 function intro(){
@@ -491,7 +528,8 @@ function intro(){
   $("#go").onclick=()=>{SFX.init();newGame();};
   $("#mode").onclick=()=>{curFull=!curFull;setMode(curFull);store("hq_mode_full",curFull);intro();};
   const r=$("#resume");if(r)r.onclick=()=>{SFX.init();curFull=!!saved.full;setMode(curFull);
-    S={step:saved.step,profile:saved.profile||{},equity:saved.equity,choices:saved.choices||[],combo:saved.combo||0};
+    S={step:saved.step,profile:saved.profile||{},equity:saved.equity,choices:saved.choices||[],combo:saved.combo||0,
+       equityHist:(saved.eqh&&saved.eqh.length)?saved.eqh:[saved.equity||100000]};
     showLevel(S.step);};
 }
 
@@ -500,6 +538,7 @@ function topbar(i,total){
   return `<div class="top fadeUp">
     <div class="dots">${Array.from({length:total},(_,j)=>
       `<span class="dot ${j===i?"on":j<i?"done":""}"></span>`).join("")}</div>
+    <canvas id="spark" class="spark"></canvas>
     <span class="eq" id="eq">${fmt(S.equity)}</span>
     <button class="mute" id="mute" aria-label="静音开关">${SFX.muted?"🔇":"🔊"}</button></div>`;
 }
@@ -510,9 +549,27 @@ function rollEquity(from,to){const el=$("#eq");if(!el){return;}
     el.textContent=fmt(from+(to-from)*(1-Math.pow(1-k,2)));
     if(k<1)raf(step);})(t0);}
 
+function setAtmo(mood){
+  const old=document.getElementById("atmo");if(old)old.remove();
+  document.body.insertAdjacentHTML("afterbegin",
+    `<div id="atmo" style="background:radial-gradient(900px 420px at 50% -6%, ${mood}2e, transparent 62%)"></div>`);
+}
+function drawSpark(){
+  const cv=$("#spark");if(!cv)return;
+  const dpr=devicePixelRatio||1,w=56,h=20;cv.width=w*dpr;cv.height=h*dpr;
+  const x=cv.getContext("2d");x.scale(dpr,dpr);
+  const hst=S.equityHist;if(hst.length<2)return;
+  const lo=Math.min(...hst),hi=Math.max(...hst),sp=(hi-lo)||1;
+  x.beginPath();
+  hst.forEach((v,i)=>{const px=2+(w-4)*i/(hst.length-1),py=h-2-(h-4)*(v-lo)/sp;
+    i?x.lineTo(px,py):x.moveTo(px,py);});
+  x.strokeStyle=hst[hst.length-1]>=hst[0]?"#ff3b5c":"#00e676";
+  x.lineWidth=1.5;x.shadowColor=x.strokeStyle;x.shadowBlur=4;x.stroke();
+}
 function showLevel(i){
   clearAll();S.step=i;saveS();
   const n=NODES[i],ep=EPS[n.ep];
+  stage().style.setProperty("--mood",n.mood);setAtmo(n.mood);
   stage().innerHTML=topbar(i,NODES.length)+`
   <div class="card fadeUp">
     <div class="chartHead"><span class="act">第${CN[i]}幕 · ${n.arc}</span>
@@ -523,7 +580,7 @@ function showLevel(i){
   <div id="decide"></div>
   <div style="flex:1"></div>
   <div class="disc">点击任意处加速入场 · 每一次选择都会留下行为痕迹</div>`;
-  bindMute();rollEquity(S.equity,S.equity);
+  bindMute();rollEquity(S.equity,S.equity);drawSpark();
   drawKline($("#kcv"),ep.bars,true,null);
   let opened=false;
   const open=()=>{if(opened)return;opened=true;buildDecision(i);};
@@ -574,6 +631,7 @@ function choose(i,j,timeout){
   S.choices.push({tag:n.tag,label});
   /* 连击 */
   if((delta.discipline||0)>0){S.combo++;}else if((delta.discipline||0)<0){S.combo=0;}
+  S.equityHist.push(S.equity);drawSpark();
   /* 盈亏演出 */
   if(pnlR[1]>0||pnlR[0]<0){
     const pct=pnlR[0]===pnlR[1]?pnlR[0]:rnd(pnlR[0],pnlR[1]);
@@ -607,6 +665,7 @@ function results(){
   <div class="reveal"><div class="pcard">
     <div class="rarity">PERSONA · 交易人格</div>
     <div class="pname">${dom.name}</div>
+    <div class="stars">★ ★ ★</div>
     <div class="pverdict">「${dom.verdict}」</div>
     <div class="spec">
       <div class="specrow"><span style="width:8.2em">${dom.name}</span>
@@ -620,8 +679,10 @@ function results(){
       <div class="dl">${DIMS.map(d=>`<div><b>${DIMCN[d]}</b> <i class="${scores[d]>=60?"posT":scores[d]<=40?"negT":""}">${scores[d]}</i></div>`).join("")}</div></div>
     <div class="breplay"><span class="tt">关键行为还原</span>
       ${picks.map(p=>`· <b>${p.tag}</b>：你选择了「${p.label}」<br>`).join("")}</div>
+    <div class="serial">No.${String(1000+Math.floor(Math.random()*9000))} · SEASON 1 · 本场第 ${S.equityHist.length} 次抉择</div>
   </div></div>
   <div class="card fadeUp" style="padding:14px">
+    <canvas id="ecv" class="ecv"></canvas>
     <div class="fin">账户终值 <i>${fmt(S.equity)}</i>（<i class="${pct>=0?"posT":"negT"}">${pct>=0?"+":""}${pct.toFixed(1)}%</i>）</div>
     <div class="reco">
       <div class="rc"><span class="ic">🛠</span><span><b>工具</b>${dom.reco[0]}</span></div>
@@ -633,7 +694,9 @@ function results(){
   <button class="btn ghost" id="again">再战一局（换一种活法）</button>
   <div class="disc">人格光谱由 8 次决策行为计算 · 优势：${dom.strength}｜盲区：${dom.weak}<br>虚拟资金 · 教育用途 · 不构成任何投资建议</div>`;
   bindMute();
+  stage().style.setProperty("--mood","#ffd166");setAtmo("#ffd166");
   drawRadar($("#rcv"),vals,132);
+  drawSpark();drawEquityCurve($("#ecv"),S.equityHist);
   SFX.reveal();confetti();vibrate([40,60,40]);
   /* 现场埋点（无服务器时静默失败，不影响游戏） */
   try{fetch("api/report",{method:"POST",headers:{"Content-Type":"application/json"},
@@ -733,9 +796,10 @@ window.addEventListener("error",()=>{try{
 }catch(e){}});
 
 /* ================= 启动 ================= */
-function newGame(){S={step:0,profile:{},equity:100000,choices:[],combo:0};showLevel(0);}
+function newGame(){S={step:0,profile:{},equity:100000,choices:[],combo:0,equityHist:[100000]};showLevel(0);}
 let curFull=!!store("hq_mode_full");
 setMode(curFull);
+setAtmo("#ffd166");
 intro();
 </script>
 </body>
