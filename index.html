@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#07090f">
+<meta name="build" content="v1.1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="行情剧场">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='14'%20fill='%230a0e18'/%3E%3Crect%20x='18'%20y='12'%20width='2'%20height='40'%20fill='%23ff3b5c'/%3E%3Crect%20x='13'%20y='20'%20width='12'%20height='24'%20fill='%23ff3b5c'/%3E%3Crect%20x='44'%20y='14'%20width='2'%20height='36'%20fill='%2300e676'/%3E%3Crect%20x='39'%20y='26'%20width='12'%20height='18'%20fill='%2300e676'/%3E%3C/svg%3E">
 <title>行情剧场 · 交易人格试炼</title>
 <style>
 :root{
@@ -18,6 +23,7 @@ body{
   background:var(--bg);color:var(--ink);
   font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei",sans-serif;
   overflow-x:hidden;touch-action:manipulation;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior-y:contain;
 }
 /* 舞台氛围：光斑 + 扫描线 + 暗角 */
 body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
@@ -495,7 +501,7 @@ function topbar(i,total){
     <div class="dots">${Array.from({length:total},(_,j)=>
       `<span class="dot ${j===i?"on":j<i?"done":""}"></span>`).join("")}</div>
     <span class="eq" id="eq">${fmt(S.equity)}</span>
-    <button class="mute" id="mute">${SFX.muted?"🔇":"🔊"}</button></div>`;
+    <button class="mute" id="mute" aria-label="静音开关">${SFX.muted?"🔇":"🔊"}</button></div>`;
 }
 function bindMute(){const m=$("#mute");if(m)m.onclick=()=>{SFX.muted=!SFX.muted;m.textContent=SFX.muted?"🔇":"🔊";};}
 function rollEquity(from,to){const el=$("#eq");if(!el){return;}
@@ -719,6 +725,12 @@ function posterView(dom,ranked,scores,pct){
 function roundRect(x,px,py,w,h,r){x.beginPath();x.moveTo(px+r,py);
   x.arcTo(px+w,py,px+w,py+h,r);x.arcTo(px+w,py+h,px,py+h,r);
   x.arcTo(px,py+h,px,py,r);x.arcTo(px,py,px+w,py,r);x.closePath();}
+
+/* 全局兜底：任何未捕获异常 → 轻提示（断点续玩已就位，刷新即恢复） */
+window.addEventListener("error",()=>{try{
+  if(document.querySelector(".toast"))return;
+  toast("出了点小状况——刷新即可从上次进度继续");
+}catch(e){}});
 
 /* ================= 启动 ================= */
 function newGame(){S={step:0,profile:{},equity:100000,choices:[],combo:0};showLevel(0);}
