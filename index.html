@@ -521,7 +521,7 @@ function saveS(){store(KEY,{step:S.step,profile:S.profile,equity:S.equity,choice
 
 /* ================= 屏幕：开场 ================= */
 function intro(){
-  clearAll();
+  clearAll();   /* 修复：模式切换反复进入开场页时，活体行情定时器叠加 */
   const saved=store(KEY);
   stage().innerHTML=`
   <div class="hero fadeUp">
@@ -543,7 +543,7 @@ function intro(){
   <button class="btn" id="go">进 场 开 演</button>
   <button class="btn ghost" id="mode" style="margin-top:10px">剧本：${curFull?"12 幕完整版":"8 幕标准版"}（点按切换）</button>
   ${saved&&saved.step>0?`<button class="btn ghost" id="resume" style="margin-top:10px">继续上次试炼（第${CN[saved.step]}幕）</button>`:""}
-  <div style="height:26px"></div>
+  <div style="height:48px"></div>
   <div class="disc">虚拟资金 · 教育用途 · 不构成任何投资建议<br>行情数据：真实历史 K 线（预烘焙）</div>
   <div class="ticker"><span>${NODES.map((n,i)=>`第${CN[i]}幕 ${n.arc} ${EPS[n.ep].pct>0?"+":""}${EPS[n.ep].pct}%`).join("&nbsp;&nbsp;·&nbsp;&nbsp;")}&nbsp;&nbsp;·&nbsp;&nbsp;THE MARKET THEATRE&nbsp;&nbsp;·&nbsp;&nbsp;</span></div>`;
   $("#go").onclick=()=>{SFX.init();newGame();};
